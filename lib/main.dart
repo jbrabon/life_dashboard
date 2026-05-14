@@ -24,11 +24,32 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final Set<String> _completedItemIds = {};
+
+  bool _isItemCompleted(dynamic item) {
+    return _completedItemIds.contains(item.id) || item.isCompleted == true;
+  }
+
+  void _toggleItem(dynamic item) {
+    setState(() {
+      if (_isItemCompleted(item)) {
+        _completedItemIds.remove(item.id);
+      } else {
+        _completedItemIds.add(item.id);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sessionState = ref.watch(startDayControllerProvider);
 
     return Scaffold(
@@ -47,7 +68,7 @@ class HomeScreen extends ConsumerWidget {
                   onPressed: () {
                     final now = DateTime.now().toUtc();
 
-                    final context = DayContext(
+                    final dayContext = DayContext(
                       startedAtUtc: now,
                       logicalDate: now.toIso8601String().split('T').first,
                       timezone: now.timeZoneName,
@@ -55,7 +76,7 @@ class HomeScreen extends ConsumerWidget {
 
                     ref
                         .read(startDayControllerProvider.notifier)
-                        .startDay(context);
+                        .startDay(dayContext);
                   },
                   child: const Text('Start Day'),
                 ),
@@ -78,7 +99,9 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text('ID: ${session.id}'),
                   const SizedBox(height: 8),
-                  Text('Started At UTC: ${session.startedAtUtc.toIso8601String()}'),
+                  Text(
+                    'Started At UTC: ${session.startedAtUtc.toIso8601String()}',
+                  ),
                   const SizedBox(height: 8),
                   Text('Logical Date: ${session.logicalDate}'),
                   const SizedBox(height: 8),
@@ -96,6 +119,14 @@ class HomeScreen extends ConsumerWidget {
                     loading: () => const CircularProgressIndicator(),
                     error: (error, stackTrace) => Text('Error: $error'),
                     data: (items) {
+                      final overdue = items
+                          .where(
+                            (item) =>
+                                item.obligationClassification ==
+                                ObligationClassification.overdue,
+                          )
+                          .toList();
+
                       final dueToday = items
                           .where(
                             (item) =>
@@ -112,26 +143,60 @@ class HomeScreen extends ConsumerWidget {
                           )
                           .toList();
 
+                      final future = items
+                          .where(
+                            (item) =>
+                                item.obligationClassification ==
+                                ObligationClassification.future,
+                          )
+                          .toList();
+
+                      Widget section(String title, List<dynamic> sectionItems) {
+                        if (sectionItems.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            for (final item in sectionItems)
+                              GestureDetector(
+                                onTap: () => _toggleItem(item),
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    '- ${item.title}',
+                                    style: TextStyle(
+                                      decoration: _isItemCompleted(item)
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                      color: _isItemCompleted(item)
+                                          ? Colors.grey
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      }
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (dueToday.isNotEmpty) ...[
-                            const Text(
-                              'Habits Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            ...dueToday.map((item) => Text('- ${item.title}')),
-                            const SizedBox(height: 16),
-                          ],
-                          if (notDueToday.isNotEmpty) ...[
-                            const Text(
-                              'Habits Not Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            ...notDueToday.map((item) => Text('- ${item.title}')),
-                          ],
+                          section('Overdue', overdue),
+                          section('Due Today', dueToday),
+                          section('Not Due Today', notDueToday),
+                          section('Future', future),
                         ],
                       );
                     },
