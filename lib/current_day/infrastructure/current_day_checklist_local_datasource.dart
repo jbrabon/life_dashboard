@@ -11,14 +11,14 @@ class CurrentDayChecklistLocalDatasource {
     return [
       CurrentDayChecklistItem(
         id: '1',
-        type: 'habit',
+        type: CurrentDayChecklistItemType.habit,
         title: 'Workout',
         isCompleted: false,
         obligationClassification: ObligationClassification.dueToday,
       ),
       CurrentDayChecklistItem(
         id: '2',
-        type: 'habit',
+        type: CurrentDayChecklistItemType.habit,
         title: 'Read',
         isCompleted: false,
         obligationClassification: ObligationClassification.notDueToday,
