@@ -1,8 +1,30 @@
 import 'package:life_dashboard/current_day/infrastructure/local_database.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:life_dashboard/current_day/application/read_models/current_day_checklist_item.dart';
+import 'package:life_dashboard/current_day/application/read_models/obligation_classification.dart';
 
 class CurrentDayChecklistLocalDatasource {
   Future<Database> get _db async => await LocalDatabase.instance;
+
+  // RESTORED METHOD (baseline behavior)
+  Future<List<CurrentDayChecklistItem>> getChecklistItems() async {
+    return [
+      CurrentDayChecklistItem(
+        id: '1',
+        type: 'habit',
+        title: 'Workout',
+        isCompleted: false,
+        obligationClassification: ObligationClassification.dueToday,
+      ),
+      CurrentDayChecklistItem(
+        id: '2',
+        type: 'habit',
+        title: 'Read',
+        isCompleted: false,
+        obligationClassification: ObligationClassification.notDueToday,
+      ),
+    ];
+  }
 
   Future<void> upsertCompletion({
     required String id,
