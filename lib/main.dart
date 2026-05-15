@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_dashboard/current_day/application/providers/checklist_completion_controller.dart';
 import 'package:life_dashboard/current_day/application/providers/current_day_checklist_providers.dart';
 import 'package:life_dashboard/current_day/application/providers/day_session_providers.dart';
+import 'package:life_dashboard/current_day/application/read_models/current_day_checklist_item.dart';
 import 'package:life_dashboard/current_day/application/read_models/obligation_classification.dart';
 import 'package:life_dashboard/current_day/domain/value_objects/day_context.dart';
 
@@ -78,7 +80,9 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text('ID: ${session.id}'),
                   const SizedBox(height: 8),
-                  Text('Started At UTC: ${session.startedAtUtc.toIso8601String()}'),
+                  Text(
+                    'Started At UTC: ${session.startedAtUtc.toIso8601String()}',
+                  ),
                   const SizedBox(height: 8),
                   Text('Logical Date: ${session.logicalDate}'),
                   const SizedBox(height: 8),
@@ -112,6 +116,33 @@ class HomeScreen extends ConsumerWidget {
                           )
                           .toList();
 
+                      Widget checklistRow(CurrentDayChecklistItem item) {
+                        return GestureDetector(
+                          onTap: () {
+                            ref
+                                .read(checklistCompletionControllerProvider)
+                                .toggleCompletion(
+                                  daySessionId: session.id,
+                                  itemId: item.id,
+                                  itemType: item.type.name,
+                                  isCompleted: !item.isCompleted,
+                                );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              '- ${item.title}',
+                              style: TextStyle(
+                                decoration: item.isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                                color: item.isCompleted ? Colors.grey : null,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -121,7 +152,7 @@ class HomeScreen extends ConsumerWidget {
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
-                            ...dueToday.map((item) => Text('- ${item.title}')),
+                            ...dueToday.map(checklistRow),
                             const SizedBox(height: 16),
                           ],
                           if (notDueToday.isNotEmpty) ...[
@@ -130,7 +161,7 @@ class HomeScreen extends ConsumerWidget {
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
-                            ...notDueToday.map((item) => Text('- ${item.title}')),
+                            ...notDueToday.map(checklistRow),
                           ],
                         ],
                       );
