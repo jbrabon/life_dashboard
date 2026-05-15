@@ -100,6 +100,14 @@ class HomeScreen extends ConsumerWidget {
                     loading: () => const CircularProgressIndicator(),
                     error: (error, stackTrace) => Text('Error: $error'),
                     data: (items) {
+                      final overdue = items
+                          .where(
+                            (item) =>
+                                item.obligationClassification ==
+                                ObligationClassification.overdue,
+                          )
+                          .toList();
+
                       final dueToday = items
                           .where(
                             (item) =>
@@ -113,6 +121,14 @@ class HomeScreen extends ConsumerWidget {
                             (item) =>
                                 item.obligationClassification ==
                                 ObligationClassification.notDueToday,
+                          )
+                          .toList();
+
+                      final future = items
+                          .where(
+                            (item) =>
+                                item.obligationClassification ==
+                                ObligationClassification.future,
                           )
                           .toList();
 
@@ -146,9 +162,18 @@ class HomeScreen extends ConsumerWidget {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (overdue.isNotEmpty) ...[
+                            const Text(
+                              'Overdue',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            ...overdue.map(checklistRow),
+                            const SizedBox(height: 16),
+                          ],
                           if (dueToday.isNotEmpty) ...[
                             const Text(
-                              'Habits Due Today',
+                              'Due Today',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
@@ -157,11 +182,20 @@ class HomeScreen extends ConsumerWidget {
                           ],
                           if (notDueToday.isNotEmpty) ...[
                             const Text(
-                              'Habits Not Due Today',
+                              'Not Due Today',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             ...notDueToday.map(checklistRow),
+                            const SizedBox(height: 16),
+                          ],
+                          if (future.isNotEmpty) ...[
+                            const Text(
+                              'Future',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            ...future.map(checklistRow),
                           ],
                         ],
                       );
