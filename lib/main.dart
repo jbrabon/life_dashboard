@@ -60,7 +60,8 @@ class HomeScreen extends ConsumerWidget {
 
                     final context = DayContext(
                       startedAtUtc: now,
-                      logicalDate: now.toIso8601String().split('T').first,
+                      logicalDate:
+                          now.toIso8601String().split('T').first,
                       timezone: now.timeZoneName,
                     );
 
@@ -73,7 +74,8 @@ class HomeScreen extends ConsumerWidget {
               );
             }
 
-            final checklistAsync = ref.watch(currentDayChecklistProvider);
+            final checklistAsync =
+                ref.watch(currentDayChecklistProvider);
 
             return SingleChildScrollView(
               child: Column(
@@ -106,8 +108,10 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   checklistAsync.when(
-                    loading: () => const CircularProgressIndicator(),
-                    error: (error, stackTrace) => Text('Error: $error'),
+                    loading: () =>
+                        const CircularProgressIndicator(),
+                    error: (error, stackTrace) =>
+                        Text('Error: $error'),
                     data: (items) {
                       final dueToday = items
                           .where(
@@ -126,31 +130,45 @@ class HomeScreen extends ConsumerWidget {
                           .toList();
 
                       Widget buildItem(CurrentDayChecklistItem item) {
-                        return ListTile(
-                          title: Text(item.title),
-                          trailing: Checkbox(
-                            value: item.isCompleted,
-                            onChanged: (value) async {
-                              await ref
-                                  .read(checklistCompletionControllerProvider)
-                                  .toggleCompletion(
-                                    daySessionId: session.id,
-                                    itemId: item.id,
-                                    itemType: _itemTypeValue(item),
-                                    isCompleted: value ?? false,
-                                  );
-                            },
+                        return InkWell(
+                          onTap: () async {
+                            await ref
+                                .read(
+                                    checklistCompletionControllerProvider)
+                                .toggleCompletion(
+                                  daySessionId: session.id,
+                                  itemId: item.id,
+                                  itemType: _itemTypeValue(item),
+                                  isCompleted: !item.isCompleted,
+                                );
+                          },
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              '- ${item.title}',
+                              style: TextStyle(
+                                color: item.isCompleted
+                                    ? Colors.grey
+                                    : null,
+                                decoration: item.isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
+                            ),
                           ),
                         );
                       }
 
                       return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
                           if (dueToday.isNotEmpty) ...[
                             const Text(
                               'Habits Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             ...dueToday.map(buildItem),
@@ -159,7 +177,8 @@ class HomeScreen extends ConsumerWidget {
                           if (notDueToday.isNotEmpty) ...[
                             const Text(
                               'Habits Not Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             ...notDueToday.map(buildItem),
