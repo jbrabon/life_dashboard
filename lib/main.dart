@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_dashboard/current_day/application/providers/checklist_completion_controller.dart';
 import 'package:life_dashboard/current_day/application/providers/current_day_checklist_providers.dart';
@@ -35,14 +36,20 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final TextEditingController _incomeAmountController =
-      TextEditingController();
+  final TextEditingController _incomeAmountController = TextEditingController();
   final TextEditingController _incomeNoteController = TextEditingController();
+  final TextEditingController _expenseAmountController = TextEditingController();
+  final TextEditingController _expenseCategoryController =
+      TextEditingController();
+  final TextEditingController _expenseNoteController = TextEditingController();
 
   @override
   void dispose() {
     _incomeAmountController.dispose();
     _incomeNoteController.dispose();
+    _expenseAmountController.dispose();
+    _expenseCategoryController.dispose();
+    _expenseNoteController.dispose();
     super.dispose();
   }
 
@@ -64,50 +71,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return [...incomplete, ...completed];
   }
 
-  int? _parseAmountCents(String rawAmount) {
-    final cleaned = rawAmount.trim().replaceAll('\$', '');
+  int? _parseAmountToCents(String value) {
+    final cleaned = value.trim().replaceAll(',', '');
 
     if (cleaned.isEmpty) {
       return null;
     }
 
-    final amount = double.tryParse(cleaned);
+    final parsed = double.tryParse(cleaned);
 
-    if (amount == null || amount <= 0) {
+    if (parsed == null || parsed <= 0) {
       return null;
     }
 
-    return (amount * 100).round();
+    return (parsed * 100).round();
   }
 
   String _formatCents(int cents) {
-    return '\$${(cents / 100).toStringAsFixed(2)}';
-  }
-
-  Future<void> _addIncome({
-    required BuildContext context,
-    required WidgetRef ref,
-    required String daySessionId,
-  }) async {
-    final amountCents = _parseAmountCents(_incomeAmountController.text);
-
-    if (amountCents == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid income amount')),
-      );
-      return;
-    }
-
-    final note = _incomeNoteController.text.trim();
-
-    await ref.read(financeEntryControllerProvider).addIncome(
-          daySessionId: daySessionId,
-          amountCents: amountCents,
-          note: note.isEmpty ? null : note,
-        );
-
-    _incomeAmountController.clear();
-    _incomeNoteController.clear();
+    final dollars = cents / 100;
+    return '\$${dollars.toStringAsFixed(2)}';
   }
 
   @override
@@ -148,6 +130,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final checklistAsync = ref.watch(currentDayChecklistProvider);
             final incomeTotalAsync =
                 ref.watch(currentDayIncomeTotalCentsProvider);
+            final expenseTotalAsync =
+                ref.watch(currentDayExpenseTotalCentsProvider);
+            final netTotalAsync = ref.watch(currentDayNetTotalCentsProvider);
 
             return SingleChildScrollView(
               child: Column(
@@ -171,34 +156,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 8),
                   Text('Timezone: ${session.timezone}'),
                   const SizedBox(height: 24),
-
                   const Text(
                     'Finance',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
                   incomeTotalAsync.when(
-                    loading: () => const CircularProgressIndicator(),
-                    error: (error, stackTrace) => Text('Error: $error'),
-                    data: (totalCents) {
+                    loading: () => const Text('Today Income: Loading...'),
+                    error: (error, stackTrace) =>
+                        Text('Today Income Error: $error'),
+                    data: (incomeTotalCents) {
                       return Text(
-                        'Today Income: ${_formatCents(totalCents)}',
+                        'Today Income: ${_formatCents(incomeTotalCents)}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       );
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  expenseTotalAsync.when(
+                    loading: () => const Text('Today Expenses: Loading...'),
+                    error: (error, stackTrace) =>
+                        Text('Today Expenses Error: $error'),
+                    data: (expenseTotalCents) {
+                      return Text(
+                        'Today Expenses: ${_formatCents(expenseTotalCents)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  netTotalAsync.when(
+                    loading: () => const Text('Today Net: Loading...'),
+                    error: (error, stackTrace) =>
+                        Text('Today Net Error: $error'),
+                    data: (netTotalCents) {
+                      return Text(
+                        'Today Net: ${_formatCents(netTotalCents)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _incomeAmountController,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}'),
+                      ),
+                    ],
                     decoration: const InputDecoration(
                       labelText: 'Income amount',
-                      hintText: 'Example: 125.50',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -206,21 +219,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   TextField(
                     controller: _incomeNoteController,
                     decoration: const InputDecoration(
-                      labelText: 'Note (optional)',
-                      hintText: 'Example: Uber',
+                      labelText: 'Income note (optional)',
                       border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: () => _addIncome(
-                      context: context,
-                      ref: ref,
-                      daySessionId: session.id,
-                    ),
+                    onPressed: () async {
+                      final amountCents =
+                          _parseAmountToCents(_incomeAmountController.text);
+
+                      if (amountCents == null) {
+                        return;
+                      }
+
+                      await ref.read(financeEntryControllerProvider).addIncome(
+                            daySessionId: session.id,
+                            amountCents: amountCents,
+                            note: _incomeNoteController.text.trim().isEmpty
+                                ? null
+                                : _incomeNoteController.text.trim(),
+                          );
+
+                      _incomeAmountController.clear();
+                      _incomeNoteController.clear();
+                    },
                     child: const Text('Add Income'),
                   ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _expenseAmountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}'),
+                      ),
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'Expense amount',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _expenseCategoryController,
+                    decoration: const InputDecoration(
+                      labelText: 'Expense category (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _expenseNoteController,
+                    decoration: const InputDecoration(
+                      labelText: 'Expense note (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final amountCents =
+                          _parseAmountToCents(_expenseAmountController.text);
 
+                      if (amountCents == null) {
+                        return;
+                      }
+
+                      await ref.read(financeEntryControllerProvider).addExpense(
+                            daySessionId: session.id,
+                            amountCents: amountCents,
+                            category:
+                                _expenseCategoryController.text.trim().isEmpty
+                                    ? null
+                                    : _expenseCategoryController.text.trim(),
+                            note: _expenseNoteController.text.trim().isEmpty
+                                ? null
+                                : _expenseNoteController.text.trim(),
+                          );
+
+                      _expenseAmountController.clear();
+                      _expenseCategoryController.clear();
+                      _expenseNoteController.clear();
+                    },
+                    child: const Text('Add Expense'),
+                  ),
                   const SizedBox(height: 24),
                   const Text(
                     'Checklist',
