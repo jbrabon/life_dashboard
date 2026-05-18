@@ -25,6 +25,20 @@ class CurrentDayChecklistRepository {
         type: CurrentDayChecklistItemType.habit,
         title: 'Read',
         isCompleted: false,
+        obligationClassification: ObligationClassification.dueToday,
+      ),
+      CurrentDayChecklistItem(
+        id: '3',
+        type: CurrentDayChecklistItemType.habit,
+        title: 'Eat',
+        isCompleted: false,
+        obligationClassification: ObligationClassification.notDueToday,
+      ),
+      CurrentDayChecklistItem(
+        id: '4',
+        type: CurrentDayChecklistItemType.habit,
+        title: 'Brush Teeth',
+        isCompleted: false,
         obligationClassification: ObligationClassification.notDueToday,
       ),
     ];
