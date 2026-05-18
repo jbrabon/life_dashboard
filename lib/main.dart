@@ -38,6 +38,15 @@ class HomeScreen extends ConsumerWidget {
     }
   }
 
+  List<CurrentDayChecklistItem> _incompleteFirst(
+    List<CurrentDayChecklistItem> items,
+  ) {
+    final incomplete = items.where((item) => !item.isCompleted).toList();
+    final completed = items.where((item) => item.isCompleted).toList();
+
+    return [...incomplete, ...completed];
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionState = ref.watch(startDayControllerProvider);
@@ -60,8 +69,7 @@ class HomeScreen extends ConsumerWidget {
 
                     final context = DayContext(
                       startedAtUtc: now,
-                      logicalDate:
-                          now.toIso8601String().split('T').first,
+                      logicalDate: now.toIso8601String().split('T').first,
                       timezone: now.timeZoneName,
                     );
 
@@ -74,8 +82,7 @@ class HomeScreen extends ConsumerWidget {
               );
             }
 
-            final checklistAsync =
-                ref.watch(currentDayChecklistProvider);
+            final checklistAsync = ref.watch(currentDayChecklistProvider);
 
             return SingleChildScrollView(
               child: Column(
@@ -108,33 +115,34 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   checklistAsync.when(
-                    loading: () =>
-                        const CircularProgressIndicator(),
-                    error: (error, stackTrace) =>
-                        Text('Error: $error'),
+                    loading: () => const CircularProgressIndicator(),
+                    error: (error, stackTrace) => Text('Error: $error'),
                     data: (items) {
-                      final dueToday = items
-                          .where(
-                            (item) =>
-                                item.obligationClassification ==
-                                ObligationClassification.dueToday,
-                          )
-                          .toList();
+                      final dueToday = _incompleteFirst(
+                        items
+                            .where(
+                              (item) =>
+                                  item.obligationClassification ==
+                                  ObligationClassification.dueToday,
+                            )
+                            .toList(),
+                      );
 
-                      final notDueToday = items
-                          .where(
-                            (item) =>
-                                item.obligationClassification ==
-                                ObligationClassification.notDueToday,
-                          )
-                          .toList();
+                      final notDueToday = _incompleteFirst(
+                        items
+                            .where(
+                              (item) =>
+                                  item.obligationClassification ==
+                                  ObligationClassification.notDueToday,
+                            )
+                            .toList(),
+                      );
 
                       Widget buildItem(CurrentDayChecklistItem item) {
                         return InkWell(
                           onTap: () async {
                             await ref
-                                .read(
-                                    checklistCompletionControllerProvider)
+                                .read(checklistCompletionControllerProvider)
                                 .toggleCompletion(
                                   daySessionId: session.id,
                                   itemId: item.id,
@@ -143,14 +151,11 @@ class HomeScreen extends ConsumerWidget {
                                 );
                           },
                           child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
                               '- ${item.title}',
                               style: TextStyle(
-                                color: item.isCompleted
-                                    ? Colors.grey
-                                    : null,
+                                color: item.isCompleted ? Colors.grey : null,
                                 decoration: item.isCompleted
                                     ? TextDecoration.lineThrough
                                     : null,
@@ -161,14 +166,12 @@ class HomeScreen extends ConsumerWidget {
                       }
 
                       return Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (dueToday.isNotEmpty) ...[
                             const Text(
                               'Habits Due Today',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             ...dueToday.map(buildItem),
@@ -177,8 +180,7 @@ class HomeScreen extends ConsumerWidget {
                           if (notDueToday.isNotEmpty) ...[
                             const Text(
                               'Habits Not Due Today',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             ...notDueToday.map(buildItem),
