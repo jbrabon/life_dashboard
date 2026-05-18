@@ -62,6 +62,19 @@ CREATE TABLE finance_expense_entries (
   created_at_utc TEXT NOT NULL
 )
 ''');
+
+        await db.execute('''
+CREATE TABLE nutrition_entries (
+  id TEXT PRIMARY KEY,
+  day_session_id TEXT NOT NULL,
+  calories INTEGER NOT NULL,
+  protein_grams INTEGER NOT NULL,
+  carbs_grams INTEGER NOT NULL,
+  sugar_grams INTEGER NOT NULL,
+  fat_grams INTEGER NOT NULL,
+  created_at_utc TEXT NOT NULL
+)
+''');
       },
     );
   }
