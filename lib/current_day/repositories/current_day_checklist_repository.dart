@@ -13,33 +13,40 @@ class CurrentDayChecklistRepository {
     final completionMap = await _datasource.getCompletionMap(daySessionId);
 
     final seedItems = [
-      CurrentDayChecklistItem(
-        id: '1',
+      const CurrentDayChecklistItem(
+        id: 'habit_workout',
         type: CurrentDayChecklistItemType.habit,
         title: 'Workout',
         isCompleted: false,
         obligationClassification: ObligationClassification.dueToday,
       ),
-      CurrentDayChecklistItem(
-        id: '2',
+      const CurrentDayChecklistItem(
+        id: 'habit_read',
         type: CurrentDayChecklistItemType.habit,
         title: 'Read',
         isCompleted: false,
+        obligationClassification: ObligationClassification.notDueToday,
+      ),
+      const CurrentDayChecklistItem(
+        id: 'todo_pay_bill',
+        type: CurrentDayChecklistItemType.todo,
+        title: 'Pay bill',
+        isCompleted: false,
         obligationClassification: ObligationClassification.dueToday,
       ),
-      CurrentDayChecklistItem(
-        id: '3',
-        type: CurrentDayChecklistItemType.habit,
-        title: 'Eat',
+      const CurrentDayChecklistItem(
+        id: 'todo_send_email',
+        type: CurrentDayChecklistItemType.todo,
+        title: 'Send email',
         isCompleted: false,
-        obligationClassification: ObligationClassification.notDueToday,
+        obligationClassification: ObligationClassification.overdue,
       ),
-      CurrentDayChecklistItem(
-        id: '4',
-        type: CurrentDayChecklistItemType.habit,
-        title: 'Brush Teeth',
+      const CurrentDayChecklistItem(
+        id: 'todo_order_supplies',
+        type: CurrentDayChecklistItemType.todo,
+        title: 'Order supplies',
         isCompleted: false,
-        obligationClassification: ObligationClassification.notDueToday,
+        obligationClassification: ObligationClassification.future,
       ),
     ];
 

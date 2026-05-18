@@ -118,6 +118,16 @@ class HomeScreen extends ConsumerWidget {
                     loading: () => const CircularProgressIndicator(),
                     error: (error, stackTrace) => Text('Error: $error'),
                     data: (items) {
+                      final overdue = _incompleteFirst(
+                        items
+                            .where(
+                              (item) =>
+                                  item.obligationClassification ==
+                                  ObligationClassification.overdue,
+                            )
+                            .toList(),
+                      );
+
                       final dueToday = _incompleteFirst(
                         items
                             .where(
@@ -134,6 +144,16 @@ class HomeScreen extends ConsumerWidget {
                               (item) =>
                                   item.obligationClassification ==
                                   ObligationClassification.notDueToday,
+                            )
+                            .toList(),
+                      );
+
+                      final future = _incompleteFirst(
+                        items
+                            .where(
+                              (item) =>
+                                  item.obligationClassification ==
+                                  ObligationClassification.future,
                             )
                             .toList(),
                       );
@@ -165,26 +185,37 @@ class HomeScreen extends ConsumerWidget {
                         );
                       }
 
+                      Widget section(
+                        String title,
+                        List<CurrentDayChecklistItem> sectionItems,
+                      ) {
+                        if (sectionItems.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...sectionItems.map(buildItem),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      }
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (dueToday.isNotEmpty) ...[
-                            const Text(
-                              'Habits Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            ...dueToday.map(buildItem),
-                            const SizedBox(height: 16),
-                          ],
-                          if (notDueToday.isNotEmpty) ...[
-                            const Text(
-                              'Habits Not Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            ...notDueToday.map(buildItem),
-                          ],
+                          section('Overdue', overdue),
+                          section('Due Today', dueToday),
+                          section('Habits Not Due Today', notDueToday),
+                          section('Future', future),
                         ],
                       );
                     },
