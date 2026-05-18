@@ -21,23 +21,23 @@ class DailySnapshotLocalDatasource {
   }) async {
     final db = await _db;
 
-    await db.insert('daily_snapshots', {
-      'id': id,
-      'day_session_id': daySessionId,
-      'finalized_at_utc': finalizedAtUtc,
-
-      'checklist_total_count': checklistTotalCount,
-      'checklist_completed_count': checklistCompletedCount,
-
-      'finance_income_cents': incomeCents,
-      'finance_expense_cents': expenseCents,
-      'finance_net_cents': netCents,
-
-      'nutrition_calories': calories,
-      'nutrition_protein_grams': proteinGrams,
-      'nutrition_carbs_grams': carbsGrams,
-      'nutrition_sugar_grams': sugarGrams,
-      'nutrition_fat_grams': fatGrams,
-    });
+    await db.insert(
+      'daily_snapshots',
+      {
+        'id': id,
+        'day_session_id': daySessionId,
+        'finalized_at_utc': finalizedAtUtc,
+        'checklist_total_count': checklistTotalCount,
+        'checklist_completed_count': checklistCompletedCount,
+        'finance_income_cents': incomeCents,
+        'finance_expense_cents': expenseCents,
+        'finance_net_cents': netCents,
+        'nutrition_calories': calories,
+        'nutrition_protein_grams': proteinGrams,
+        'nutrition_carbs_grams': carbsGrams,
+        'nutrition_sugar_grams': sugarGrams,
+        'nutrition_fat_grams': fatGrams,
+      },
+    );
   }
 }
