@@ -4,7 +4,7 @@ import 'package:life_dashboard/current_day/infrastructure/local_database.dart';
 import 'package:sqflite/sqflite.dart';
 
 class CurrentDayChecklistLocalDatasource {
-  Future<Database> get _db async => await LocalDatabase.instance;
+  Future<Database> get _db async => LocalDatabase.instance;
 
   Future<List<CurrentDayChecklistItem>> getChecklistItems({
     required String daySessionId,
@@ -33,7 +33,7 @@ class CurrentDayChecklistLocalDatasource {
         id: item.id,
         type: item.type,
         title: item.title,
-        isCompleted: completionMap[item.id] ?? item.isCompleted,
+        isCompleted: completionMap[item.id] ?? false,
         obligationClassification: item.obligationClassification,
       );
     }).toList();
