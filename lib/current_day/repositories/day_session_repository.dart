@@ -5,4 +5,9 @@ abstract class DaySessionRepository {
   Future<DaySession?> getOpenDaySession();
 
   Future<DaySession> startDay(DayContext context);
+
+  Future<void> closeDaySession({
+    required String daySessionId,
+    required String closedAtUtc,
+  });
 }
