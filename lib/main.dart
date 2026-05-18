@@ -5,6 +5,7 @@ import 'package:life_dashboard/current_day/application/providers/checklist_compl
 import 'package:life_dashboard/current_day/application/providers/current_day_checklist_providers.dart';
 import 'package:life_dashboard/current_day/application/providers/day_session_providers.dart';
 import 'package:life_dashboard/current_day/application/providers/finance_providers.dart';
+import 'package:life_dashboard/current_day/application/providers/nutrition_providers.dart';
 import 'package:life_dashboard/current_day/application/read_models/current_day_checklist_item.dart';
 import 'package:life_dashboard/current_day/application/read_models/obligation_classification.dart';
 import 'package:life_dashboard/current_day/domain/value_objects/day_context.dart';
@@ -43,6 +44,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       TextEditingController();
   final TextEditingController _expenseNoteController = TextEditingController();
 
+  final TextEditingController _caloriesController = TextEditingController();
+  final TextEditingController _proteinController = TextEditingController();
+  final TextEditingController _carbsController = TextEditingController();
+  final TextEditingController _sugarController = TextEditingController();
+  final TextEditingController _fatController = TextEditingController();
+
   @override
   void dispose() {
     _incomeAmountController.dispose();
@@ -50,6 +57,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _expenseAmountController.dispose();
     _expenseCategoryController.dispose();
     _expenseNoteController.dispose();
+
+    _caloriesController.dispose();
+    _proteinController.dispose();
+    _carbsController.dispose();
+    _sugarController.dispose();
+    _fatController.dispose();
+
     super.dispose();
   }
 
@@ -85,6 +99,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return (parsed * 100).round();
+  }
+
+  int _parseMacroInt(String value) {
+    final parsed = int.tryParse(value.trim());
+    return parsed == null || parsed < 0 ? 0 : parsed;
   }
 
   String _formatCents(int cents) {
@@ -133,6 +152,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final expenseTotalAsync =
                 ref.watch(currentDayExpenseTotalCentsProvider);
             final netTotalAsync = ref.watch(currentDayNetTotalCentsProvider);
+            final nutritionTotalsAsync =
+                ref.watch(currentDayNutritionTotalsProvider);
 
             return SingleChildScrollView(
               child: Column(
@@ -305,6 +326,108 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       _expenseNoteController.clear();
                     },
                     child: const Text('Add Expense'),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Nutrition',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  nutritionTotalsAsync.when(
+                    loading: () => const Text('Nutrition: Loading...'),
+                    error: (error, stackTrace) =>
+                        Text('Nutrition Error: $error'),
+                    data: (totals) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Calories: ${totals.calories}'),
+                          Text('Protein: ${totals.proteinGrams}g'),
+                          Text('Carbs: ${totals.carbsGrams}g'),
+                          Text('Sugar: ${totals.sugarGrams}g'),
+                          Text('Fat: ${totals.fatGrams}g'),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _caloriesController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      labelText: 'Calories',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _proteinController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      labelText: 'Protein grams',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _carbsController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      labelText: 'Carbs grams',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _sugarController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      labelText: 'Sugar grams',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _fatController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      labelText: 'Fat grams',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await ref
+                          .read(nutritionEntryControllerProvider)
+                          .addEntry(
+                            daySessionId: session.id,
+                            calories: _parseMacroInt(
+                              _caloriesController.text,
+                            ),
+                            proteinGrams: _parseMacroInt(
+                              _proteinController.text,
+                            ),
+                            carbsGrams: _parseMacroInt(_carbsController.text),
+                            sugarGrams: _parseMacroInt(_sugarController.text),
+                            fatGrams: _parseMacroInt(_fatController.text),
+                          );
+
+                      _caloriesController.clear();
+                      _proteinController.clear();
+                      _carbsController.clear();
+                      _sugarController.clear();
+                      _fatController.clear();
+                    },
+                    child: const Text('Add Nutrition Entry'),
                   ),
                   const SizedBox(height: 24),
                   const Text(
