@@ -35,7 +35,7 @@ CREATE TABLE checklist_completion (
   item_type TEXT NOT NULL,
   is_completed INTEGER NOT NULL,
   completed_at_utc TEXT,
-  updated_at_utc TEXT NOT NULL
+  updated_at_utc TEXT NOT NULL,
   UNIQUE(day_session_id, item_id)
 )
 ''');
