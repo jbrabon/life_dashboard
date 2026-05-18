@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_dashboard/current_day/application/providers/checklist_completion_controller.dart';
 import 'package:life_dashboard/current_day/application/providers/current_day_checklist_providers.dart';
 import 'package:life_dashboard/current_day/application/providers/day_session_providers.dart';
-import 'package:life_dashboard/current_day/application/read_models/current_day_checklist_item.dart';
 import 'package:life_dashboard/current_day/application/read_models/obligation_classification.dart';
 import 'package:life_dashboard/current_day/domain/value_objects/day_context.dart';
 
@@ -51,7 +50,8 @@ class HomeScreen extends ConsumerWidget {
 
                     final context = DayContext(
                       startedAtUtc: now,
-                      logicalDate: now.toIso8601String().split('T').first,
+                      logicalDate:
+                          now.toIso8601String().split('T').first,
                       timezone: now.timeZoneName,
                     );
 
@@ -64,7 +64,8 @@ class HomeScreen extends ConsumerWidget {
               );
             }
 
-            final checklistAsync = ref.watch(currentDayChecklistProvider);
+            final checklistAsync =
+                ref.watch(currentDayChecklistProvider);
 
             return SingleChildScrollView(
               child: Column(
@@ -97,17 +98,11 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   checklistAsync.when(
-                    loading: () => const CircularProgressIndicator(),
-                    error: (error, stackTrace) => Text('Error: $error'),
+                    loading: () =>
+                        const CircularProgressIndicator(),
+                    error: (error, stackTrace) =>
+                        Text('Error: $error'),
                     data: (items) {
-                      final overdue = items
-                          .where(
-                            (item) =>
-                                item.obligationClassification ==
-                                ObligationClassification.overdue,
-                          )
-                          .toList();
-
                       final dueToday = items
                           .where(
                             (item) =>
@@ -124,78 +119,48 @@ class HomeScreen extends ConsumerWidget {
                           )
                           .toList();
 
-                      final future = items
-                          .where(
-                            (item) =>
-                                item.obligationClassification ==
-                                ObligationClassification.future,
-                          )
-                          .toList();
-
-                      Widget checklistRow(CurrentDayChecklistItem item) {
-                        return GestureDetector(
-                          onTap: () {
-                            ref
-                                .read(checklistCompletionControllerProvider)
-                                .toggleCompletion(
-                                  daySessionId: session.id,
-                                  itemId: item.id,
-                                  itemType: item.type.name,
-                                  isCompleted: !item.isCompleted,
-                                );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(
-                              '- ${item.title}',
-                              style: TextStyle(
-                                decoration: item.isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                color: item.isCompleted ? Colors.grey : null,
-                              ),
-                            ),
+                      Widget buildItem(item) {
+                        return ListTile(
+                          title: Text(item.title),
+                          trailing: Checkbox(
+                            value: item.isCompleted,
+                            onChanged: (value) async {
+                              await ref
+                                  .read(
+                                      checklistCompletionControllerProvider)
+                                  .toggleCompletion(
+                                    daySessionId: session.id,
+                                    itemId: item.id,
+                                    itemType: item.type.name,
+                                    isCompleted: value ?? false,
+                                  );
+                            },
                           ),
                         );
                       }
 
                       return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
-                          if (overdue.isNotEmpty) ...[
-                            const Text(
-                              'Overdue',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            ...overdue.map(checklistRow),
-                            const SizedBox(height: 16),
-                          ],
                           if (dueToday.isNotEmpty) ...[
                             const Text(
-                              'Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              'Habits Due Today',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
-                            ...dueToday.map(checklistRow),
+                            ...dueToday.map(buildItem),
                             const SizedBox(height: 16),
                           ],
                           if (notDueToday.isNotEmpty) ...[
                             const Text(
-                              'Not Due Today',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              'Habits Not Due Today',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
-                            ...notDueToday.map(checklistRow),
-                            const SizedBox(height: 16),
-                          ],
-                          if (future.isNotEmpty) ...[
-                            const Text(
-                              'Future',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            ...future.map(checklistRow),
+                            ...notDueToday.map(buildItem),
                           ],
                         ],
                       );

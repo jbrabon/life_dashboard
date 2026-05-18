@@ -1,42 +1,25 @@
-import 'package:life_dashboard/current_day/application/read_models/current_day_checklist_item.dart';
-import 'package:life_dashboard/current_day/application/read_models/obligation_classification.dart';
 import 'package:life_dashboard/current_day/infrastructure/local_database.dart';
 import 'package:sqflite/sqflite.dart';
 
 class CurrentDayChecklistLocalDatasource {
   Future<Database> get _db async => LocalDatabase.instance;
 
-  Future<List<CurrentDayChecklistItem>> getChecklistItems({
-    required String daySessionId,
-  }) async {
-    final completionMap = await getCompletionMap(daySessionId);
+  Future<Map<String, bool>> getCompletionMap(String daySessionId) async {
+    final db = await _db;
 
-    final seedItems = [
-      CurrentDayChecklistItem(
-        id: '1',
-        type: CurrentDayChecklistItemType.habit,
-        title: 'Workout',
-        isCompleted: false,
-        obligationClassification: ObligationClassification.dueToday,
-      ),
-      CurrentDayChecklistItem(
-        id: '2',
-        type: CurrentDayChecklistItemType.habit,
-        title: 'Read',
-        isCompleted: false,
-        obligationClassification: ObligationClassification.notDueToday,
-      ),
-    ];
+    final results = await db.query(
+      'checklist_completion',
+      where: 'day_session_id = ?',
+      whereArgs: [daySessionId],
+    );
 
-    return seedItems.map((item) {
-      return CurrentDayChecklistItem(
-        id: item.id,
-        type: item.type,
-        title: item.title,
-        isCompleted: completionMap[item.id] ?? false,
-        obligationClassification: item.obligationClassification,
-      );
-    }).toList();
+    final map = <String, bool>{};
+
+    for (final row in results) {
+      map[row['item_id'] as String] = (row['is_completed'] as int) == 1;
+    }
+
+    return map;
   }
 
   Future<void> upsertCompletion({
@@ -63,23 +46,5 @@ class CurrentDayChecklistLocalDatasource {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-  }
-
-  Future<Map<String, bool>> getCompletionMap(String daySessionId) async {
-    final db = await _db;
-
-    final results = await db.query(
-      'checklist_completion',
-      where: 'day_session_id = ?',
-      whereArgs: [daySessionId],
-    );
-
-    final map = <String, bool>{};
-
-    for (final row in results) {
-      map[row['item_id'] as String] = (row['is_completed'] as int) == 1;
-    }
-
-    return map;
   }
 }

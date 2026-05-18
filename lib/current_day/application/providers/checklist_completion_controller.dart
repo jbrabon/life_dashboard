@@ -1,18 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_dashboard/current_day/application/providers/current_day_checklist_providers.dart';
 import 'package:life_dashboard/current_day/application/use_cases/toggle_checklist_item_completion_use_case.dart';
-import 'package:life_dashboard/current_day/repositories/current_day_checklist_repository.dart';
-
-final currentDayChecklistRepositoryProvider = Provider((ref) {
-  return CurrentDayChecklistRepository(
-    ref.read(currentDayChecklistLocalDatasourceProvider),
-  );
-});
 
 final toggleChecklistItemCompletionUseCaseProvider = Provider((ref) {
-  return ToggleChecklistItemCompletionUseCase(
-    ref.read(currentDayChecklistRepositoryProvider),
-  );
+  final repository = ref.read(currentDayChecklistRepositoryProvider);
+  return ToggleChecklistItemCompletionUseCase(repository);
 });
 
 class ChecklistCompletionController {
