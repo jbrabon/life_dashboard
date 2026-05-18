@@ -50,6 +50,18 @@ CREATE TABLE finance_income_entries (
   created_at_utc TEXT NOT NULL
 )
 ''');
+
+        await db.execute('''
+CREATE TABLE finance_expense_entries (
+  id TEXT PRIMARY KEY,
+  day_session_id TEXT NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  category TEXT,
+  note TEXT,
+  occurred_at_utc TEXT NOT NULL,
+  created_at_utc TEXT NOT NULL
+)
+''');
       },
     );
   }
