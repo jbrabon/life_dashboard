@@ -5,6 +5,7 @@ import 'package:life_dashboard/current_day/application/providers/checklist_compl
 import 'package:life_dashboard/current_day/application/providers/current_day_checklist_providers.dart';
 import 'package:life_dashboard/current_day/application/providers/day_session_providers.dart';
 import 'package:life_dashboard/current_day/application/providers/finance_providers.dart';
+import 'package:life_dashboard/current_day/application/providers/finish_day_providers.dart';
 import 'package:life_dashboard/current_day/application/providers/nutrition_providers.dart';
 import 'package:life_dashboard/current_day/application/read_models/current_day_checklist_item.dart';
 import 'package:life_dashboard/current_day/application/read_models/obligation_classification.dart';
@@ -39,7 +40,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _incomeAmountController = TextEditingController();
   final TextEditingController _incomeNoteController = TextEditingController();
-  final TextEditingController _expenseAmountController = TextEditingController();
+  final TextEditingController _expenseAmountController =
+      TextEditingController();
   final TextEditingController _expenseCategoryController =
       TextEditingController();
   final TextEditingController _expenseNoteController = TextEditingController();
@@ -176,6 +178,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Text('Logical Date: ${session.logicalDate}'),
                   const SizedBox(height: 8),
                   Text('Timezone: ${session.timezone}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await ref
+                          .read(finishDayControllerProvider)
+                          .finishDay(daySessionId: session.id);
+                    },
+                    child: const Text('Finish Day'),
+                  ),
                   const SizedBox(height: 24),
                   const Text(
                     'Finance',
