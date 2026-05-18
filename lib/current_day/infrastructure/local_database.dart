@@ -22,6 +22,7 @@ class LocalDatabase {
 CREATE TABLE day_sessions (
   id TEXT PRIMARY KEY,
   started_at_utc TEXT NOT NULL,
+  closed_at_utc TEXT,
   logical_date TEXT NOT NULL,
   timezone TEXT NOT NULL
 )
@@ -73,6 +74,27 @@ CREATE TABLE nutrition_entries (
   sugar_grams INTEGER NOT NULL,
   fat_grams INTEGER NOT NULL,
   created_at_utc TEXT NOT NULL
+)
+''');
+
+        await db.execute('''
+CREATE TABLE daily_snapshots (
+  id TEXT PRIMARY KEY,
+  day_session_id TEXT NOT NULL UNIQUE,
+  finalized_at_utc TEXT NOT NULL,
+
+  checklist_total_count INTEGER NOT NULL,
+  checklist_completed_count INTEGER NOT NULL,
+
+  finance_income_cents INTEGER NOT NULL,
+  finance_expense_cents INTEGER NOT NULL,
+  finance_net_cents INTEGER NOT NULL,
+
+  nutrition_calories INTEGER NOT NULL,
+  nutrition_protein_grams INTEGER NOT NULL,
+  nutrition_carbs_grams INTEGER NOT NULL,
+  nutrition_sugar_grams INTEGER NOT NULL,
+  nutrition_fat_grams INTEGER NOT NULL
 )
 ''');
       },
