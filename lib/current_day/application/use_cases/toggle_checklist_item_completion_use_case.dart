@@ -15,7 +15,7 @@ class ToggleChecklistItemCompletionUseCase {
     final nowUtc = DateTime.now().toUtc().toIso8601String();
 
     await _repository.upsertCompletion(
-      id: IdGenerator.generate(),
+      id: IdGenerator().generate(),
       daySessionId: daySessionId,
       itemId: itemId,
       itemType: itemType,
