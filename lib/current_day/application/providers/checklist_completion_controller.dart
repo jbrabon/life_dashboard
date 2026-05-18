@@ -18,6 +18,8 @@ class ChecklistCompletionController {
     required String itemType,
     required bool isCompleted,
   }) async {
+    print('TOOGLE FIRED: $itemId -> $isCompleted');
+    
     final useCase = _ref.read(toggleChecklistItemCompletionUseCaseProvider);
 
     await useCase.execute(
